@@ -186,20 +186,12 @@ class ModelApi {
 
   ///predicts raw image but returns the raw net output
   Future<List<double?>> getRawImagePredictionList(
-    int arg_index,
-    Uint8List arg_imageData, {
-    bool isTupleOutput = false,
-    int tupleIndex = 0,
-  }) async {
+      int arg_index, Uint8List arg_imageData, bool? arg_isTupleOutput, int? arg_tupleIndex) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.pytorch_lite.ModelApi.getRawImagePredictionList', codec,
         binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(<Object?>[
-      arg_index,
-      arg_imageData,
-      isTupleOutput,
-      tupleIndex,
-    ]) as List<Object?>?;
+    final List<Object?>? replyList =
+        await channel.send(<Object?>[arg_index, arg_imageData, arg_isTupleOutput, arg_tupleIndex]) as List<Object?>?;
     if (replyList == null) {
       throw PlatformException(
         code: 'channel-error',
@@ -223,14 +215,13 @@ class ModelApi {
 
   ///predicts raw image but returns the raw net output
   Future<List<ResultObjectDetection?>> getRawImagePredictionListObjectDetection(
-    int arg_index,
-    Uint8List arg_imageData,
-    double arg_minimumScore,
-    double arg_IOUThreshold,
-    int arg_boxesLimit, {
-    bool isTupleOutput = false,
-    int tupleIndex = 0,
-  }) async {
+      int arg_index,
+      Uint8List arg_imageData,
+      double arg_minimumScore,
+      double arg_IOUThreshold,
+      int arg_boxesLimit,
+      bool? arg_isTupleOutput,
+      int? arg_tupleIndex) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.pytorch_lite.ModelApi.getRawImagePredictionListObjectDetection', codec,
         binaryMessenger: _binaryMessenger);
@@ -240,8 +231,8 @@ class ModelApi {
       arg_minimumScore,
       arg_IOUThreshold,
       arg_boxesLimit,
-      isTupleOutput,
-      tupleIndex,
+      arg_isTupleOutput,
+      arg_tupleIndex
     ]) as List<Object?>?;
     if (replyList == null) {
       throw PlatformException(
@@ -266,16 +257,15 @@ class ModelApi {
 
   ///predicts image but returns the raw net output
   Future<List<double?>> getImagePredictionList(
-    int arg_index,
-    Uint8List? arg_imageData,
-    List<Uint8List?>? arg_imageBytesList,
-    int? arg_imageWidthForBytesList,
-    int? arg_imageHeightForBytesList,
-    List<double?> arg_mean,
-    List<double?> arg_std, {
-    bool isTupleOutput = false,
-    int tupleIndex = 0,
-  }) async {
+      int arg_index,
+      Uint8List? arg_imageData,
+      List<Uint8List?>? arg_imageBytesList,
+      int? arg_imageWidthForBytesList,
+      int? arg_imageHeightForBytesList,
+      List<double?> arg_mean,
+      List<double?> arg_std,
+      bool? arg_isTupleOutput,
+      int? arg_tupleIndex) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.pytorch_lite.ModelApi.getImagePredictionList', codec,
         binaryMessenger: _binaryMessenger);
@@ -287,8 +277,8 @@ class ModelApi {
       arg_imageHeightForBytesList,
       arg_mean,
       arg_std,
-      isTupleOutput,
-      tupleIndex,
+      arg_isTupleOutput,
+      arg_tupleIndex
     ]) as List<Object?>?;
     if (replyList == null) {
       throw PlatformException(
@@ -313,17 +303,16 @@ class ModelApi {
 
   ///predicts image but returns the output detections
   Future<List<ResultObjectDetection?>> getImagePredictionListObjectDetection(
-    int arg_index,
-    Uint8List? arg_imageData,
-    List<Uint8List?>? arg_imageBytesList,
-    int? arg_imageWidthForBytesList,
-    int? arg_imageHeightForBytesList,
-    double arg_minimumScore,
-    double arg_IOUThreshold,
-    int arg_boxesLimit, {
-    bool isTupleOutput = false,
-    int tupleIndex = 0,
-  }) async {
+      int arg_index,
+      Uint8List? arg_imageData,
+      List<Uint8List?>? arg_imageBytesList,
+      int? arg_imageWidthForBytesList,
+      int? arg_imageHeightForBytesList,
+      double arg_minimumScore,
+      double arg_IOUThreshold,
+      int arg_boxesLimit,
+      bool? arg_isTupleOutput,
+      int? arg_tupleIndex) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.pytorch_lite.ModelApi.getImagePredictionListObjectDetection', codec,
         binaryMessenger: _binaryMessenger);
@@ -336,8 +325,8 @@ class ModelApi {
       arg_minimumScore,
       arg_IOUThreshold,
       arg_boxesLimit,
-      isTupleOutput,
-      tupleIndex,
+      arg_isTupleOutput,
+      arg_tupleIndex
     ]) as List<Object?>?;
     if (replyList == null) {
       throw PlatformException(
