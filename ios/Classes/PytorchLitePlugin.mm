@@ -214,18 +214,99 @@ completion([NSNumber numberWithInteger:i], nil);
     }
 }
 
-- (void)getRawImagePredictionListIndex:(nonnull NSNumber *)index imageData:(nonnull FlutterStandardTypedData *)imageData isTupleOutput:(nonnull NSNumber *)isTupleOutput tupleIndex:(nonnull NSNumber *)tupleIndex completion:(nonnull void (^)(NSArray<NSNumber *> * _Nullable, FlutterError * _Nullable))completion { 
+- (void)getRawImagePredictionListIndex:(nonnull NSNumber *)index
+        imageData:(nonnull FlutterStandardTypedData *)imageData
+        isTupleOutput:(nonnull NSNumber *)isTupleOutput
+        tupleIndex:(nonnull NSNumber *)tupleIndex
+        completion:(nonnull void (^)(NSArray<NSNumber *> * _Nullable, FlutterError * _Nullable))completion
+{
     PrePostProcessor *prePostProcessor = self.prePostProcessors[index.intValue];
+    Module *imageModule = self.modules[index.intValue];
 
-    NSArray<NSNumber*> *results = [self predictImage:(float *)[imageData.data bytes] withWidth:prePostProcessor.mImageWidth andHeight:prePostProcessor.mImageHeight atIndex:[index integerValue] isObjectDetection:FALSE objectDetectionType:0 isTupleOutput:isTupleOutput tupleIndex:tupleIndex];
+    @try {
+        NSUInteger imageWidth = prePostProcessor.mImageWidth;
+        NSUInteger imageHeight = prePostProcessor.mImageHeight;
 
-    if (results) {
-        completion(results, nil);
-    } else {
-        FlutterError *error = [FlutterError errorWithCode:@"PREDICTION_ERROR" message:@"Prediction failed" details:nil];
+        NSUInteger bufferSize = 3 * imageWidth * imageHeight;
+        FloatBuffer floatBuffer = (FloatBuffer)malloc(bufferSize * sizeof(float));
+
+        ByteBuffer byteBuffer = ByteBuffer_wrap(imageData.data.bytes, imageData.data.length);
+        byteBuffer.order(ByteOrder_nativeOrder());
+        FloatBuffer tempFloatBuffer = byteBuffer.asFloatBuffer();
+        memcpy(floatBuffer, tempFloatBuffer, bufferSize * sizeof(float));
+
+        Tensor *imageInputTensor = [Tensor fromBlobWithFloatBuffer:floatBuffer
+                                                              dims:@[@1, @3, @(imageHeight), @(imageWidth)]];
+
+        Tensor *imageOutputTensor = nil;
+        if ([isTupleOutput boolValue]) {
+            imageOutputTensor = [imageModule forwardTuple:imageInputTensor][tupleIndex.intValue].toTensor();
+        } else {
+            imageOutputTensor = [imageModule forward:imageInputTensor].toTensor();
+        }
+
+        NSMutableArray<NSNumber *> *doubleArray = [NSMutableArray array];
+        switch (imageOutputTensor.dtype) {
+            case TENSOR_DTYPE_UINT8: {
+                NSData *byteArray = [imageOutputTensor getDataAsUnsignedByteArray];
+                NSUInteger length = byteArray.length;
+                for (NSUInteger i = 0; i < length; i++) {
+                    uint8_t byteValue;
+                    [byteArray getBytes:&byteValue range:NSMakeRange(i, 1)];
+                    [doubleArray addObject:@((double)byteValue)];
+                }
+            }
+                break;
+            case TENSOR_DTYPE_INT8: {
+                NSData *byteArray = [imageOutputTensor getDataAsByteArray];
+                NSUInteger length = byteArray.length;
+                for (NSUInteger i = 0; i < length; i++) {
+                    int8_t byteValue;
+                    [byteArray getBytes:&byteValue range:NSMakeRange(i, 1)];
+                    [doubleArray addObject:@((double)byteValue)];
+                }
+            }
+                break;
+            case TENSOR_DTYPE_INT32: {
+                NSArray<NSNumber *> *intArray = [imageOutputTensor getDataAsIntArray];
+                for (NSNumber *num in intArray) {
+                    [doubleArray addObject:@((double)[num intValue])];
+                }
+            }
+                break;
+            case TENSOR_DTYPE_FLOAT32: {
+                NSArray<NSNumber *> *floatArray = [imageOutputTensor getDataAsFloatArray];
+                for (NSNumber *num in floatArray) {
+                    [doubleArray addObject:@((double)[num floatValue])];
+                }
+            }
+                break;
+            case TENSOR_DTYPE_INT64: {
+                NSArray<NSNumber *> *longArray = [imageOutputTensor getDataAsLongArray];
+                for (NSNumber *num in longArray) {
+                    [doubleArray addObject:@((double)[num longValue])];
+                }
+            }
+                break;
+            case TENSOR_DTYPE_FLOAT64: {
+                NSArray<NSNumber *> *rawDoubleArray = [imageOutputTensor getDataAsDoubleArray];
+                [doubleArray addObjectsFromArray:rawDoubleArray];
+            }
+                break;
+            default:
+                NSLog(@"Unsupported tensor data type");
+                completion(nil, nil);
+                return;
+        }
+
+        completion(doubleArray, nil);
+    } @catch (NSException *e) {
+        NSLog(@"Error classifying image: %@", e);
+        FlutterError *error = [FlutterError errorWithCode:@"EXCEPTION"
+                                                  message:@"An error occurred while classifying the image"
+                                                  details:e.reason];
         completion(nil, error);
     }
-    
 }
 
 
